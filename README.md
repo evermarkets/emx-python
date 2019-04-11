@@ -4,13 +4,6 @@
 
 [EMX API client](https://www.emx.com/) is available in this package.
 
-### Installation
-
-```
-pip install emx
-
-```
-
 ### Example
 
 ```
