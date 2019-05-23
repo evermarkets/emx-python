@@ -85,3 +85,6 @@ def get_sub_params(api_key, api_secret, symbol, channels):
             "timestamp": timestamp
          }
     return msg
+
+def is_http_success(code):
+    return code >= 200 and code < 300

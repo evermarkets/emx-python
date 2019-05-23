@@ -14,7 +14,13 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import requests
-from emx.utils import EmxApiException, handle_result, generate_signature, get_timestamp
+from emx.utils import (
+    EmxApiException,
+    handle_result,
+    generate_signature,
+    get_timestamp,
+    is_http_success,
+)
 
 
 class RestApi():
@@ -73,7 +79,7 @@ class RestApi():
         self._headers['EMX-ACCESS-TIMESTAMP'] = str(timestamp)
 
         result = self.session.get(url=url, params="", headers=self._headers)
-        if result.status_code != 200:
+        if not is_http_success(result.status_code):
             raise EmxApiException("Request failed. Reason: {}".format(result.text))
         return result
 
@@ -90,7 +96,7 @@ class RestApi():
         url = self.uri + endpoint
         body = {"start_time": start_time}
         result = self.session.get(url=url, params=body)
-        if result.status_code != 200:
+        if not is_http_success(result.status_code):
             raise EmxApiException("Request failed. Reason: {}".format(result.text))
         return result
 
@@ -124,7 +130,7 @@ class RestApi():
         self._headers['EMX-ACCESS-SIG'] = signature.decode().strip()
         self._headers['EMX-ACCESS-TIMESTAMP'] = str(timestamp)
         result = self.session.get(url=url, json=body, headers=self._headers)
-        if result.status_code != 200:
+        if not is_http_success(result.status_code):
             raise EmxApiException("Request failed. Reason: {}".format(result.text))
         return result
 
@@ -151,7 +157,7 @@ class RestApi():
         self._headers['EMX-ACCESS-SIG'] = signature.decode().strip()
         self._headers['EMX-ACCESS-TIMESTAMP'] = str(timestamp)
         result = self.session.get(url=url, json=body, headers=self._headers)
-        if result.status_code != 200:
+        if not is_http_success(result.status_code):
             raise EmxApiException("Request failed. Reason: {}".format(result.text))
         return result
 
@@ -176,7 +182,7 @@ class RestApi():
         self._headers['EMX-ACCESS-SIG'] = signature.decode().strip()
         self._headers['EMX-ACCESS-TIMESTAMP'] = str(timestamp)
         result = self.session.put(url=url, json=body, headers=self._headers)
-        if result.status_code != 200:
+        if not is_http_success(result.status_code):
             raise EmxApiException("Request failed. Reason: {}".format(result.text))
         return result
 
@@ -204,7 +210,7 @@ class RestApi():
         self._headers['EMX-ACCESS-SIG'] = signature.decode().strip()
         self._headers['EMX-ACCESS-TIMESTAMP'] = str(timestamp)
         result = self.session.get(url=url, json=body, headers=self._headers)
-        if result.status_code != 200:
+        if not is_http_success(result.status_code):
             raise EmxApiException("Request failed. Reason: {}".format(result.text))
         return result
 
@@ -226,7 +232,7 @@ class RestApi():
         self._headers['EMX-ACCESS-SIG'] = signature.decode().strip()
         self._headers['EMX-ACCESS-TIMESTAMP'] = str(timestamp)
         result = self.session.get(url=url, params="", headers=self._headers)
-        if result.status_code != 200:
+        if not is_http_success(result.status_code):
             raise EmxApiException("Request failed. Reason: {}".format(result.text))
         return result
 
@@ -248,7 +254,7 @@ class RestApi():
         self._headers['EMX-ACCESS-SIG'] = signature.decode().strip()
         self._headers['EMX-ACCESS-TIMESTAMP'] = str(timestamp)
         result = self.session.post(url=url, params="", headers=self._headers)
-        if result.status_code != 200:
+        if not is_http_success(result.status_code):
             raise EmxApiException("Request failed. Reason: {}".format(result.text))
         return result
 
@@ -271,7 +277,7 @@ class RestApi():
         self._headers['EMX-ACCESS-SIG'] = signature.decode().strip()
         self._headers['EMX-ACCESS-TIMESTAMP'] = str(timestamp)
         result = self.session.delete(url=url, params="", headers=self._headers)
-        if result.status_code != 200:
+        if not is_http_success(result.status_code):
             raise EmxApiException("Request failed. Reason: {}".format(result.text))
         return result
 
@@ -313,7 +319,7 @@ class RestApi():
         self._headers['EMX-ACCESS-SIG'] = signature.decode().strip()
         self._headers['EMX-ACCESS-TIMESTAMP'] = str(timestamp)
         result = self.session.get(url=url, json=body, headers=self._headers)
-        if result.status_code != 200:
+        if not is_http_success(result.status_code):
             raise EmxApiException("Request failed. Reason: {}".format(result.text))
         return result
 
@@ -342,7 +348,7 @@ class RestApi():
         self._headers['EMX-ACCESS-SIG'] = signature.decode().strip()
         self._headers['EMX-ACCESS-TIMESTAMP'] = str(timestamp)
         result = self.session.post(url=url, json=body, headers=self._headers)
-        if result.status_code != 200:
+        if not is_http_success(result.status_code):
             raise EmxApiException("Request failed. Reason: {}".format(result.text))
         return result
 
@@ -356,7 +362,7 @@ class RestApi():
         url = self.uri + endpoint
         body_str = "{}"
         result = self.session.get(url=url, params=body_str, headers=self._headers)
-        if result.status_code != 200:
+        if not is_http_success(result.status_code):
             raise EmxApiException("Request failed. Reason: {}".format(result.text))
         return result
 
@@ -369,6 +375,6 @@ class RestApi():
         url = self.uri + endpoint
         body_str = "{}"
         result = self.session.get(url=url, params=body_str, headers=self._headers)
-        if result.status_code != 200:
+        if not is_http_success(result.status_code):
             raise EmxApiException("Request failed. Reason: {}".format(result.text))
         return result
