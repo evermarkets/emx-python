@@ -65,8 +65,8 @@ def handle_result(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
         result = func(*args, **kwargs)
-        if result.status_code != 200 and result.status_code != 202:
-            raise Exception("Request failed due to {}".format(result.text))
+        if result.status_code < 200 or result.status_code > 300:
+            raise EmxApiException("Request failed. Reason: {}".format(result.text))
         return result.text
     return wrapper
 
@@ -85,6 +85,3 @@ def get_sub_params(api_key, api_secret, symbol, channels):
             "timestamp": timestamp
          }
     return msg
-
-def is_http_success(code):
-    return code >= 200 and code < 300
