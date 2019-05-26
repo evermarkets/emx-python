@@ -314,6 +314,31 @@ class RestApi():
     @handle_result
     def create_new_order(self, contract_code, order_type,
                          order_side, size, client_id="", price=""):
+        """Create new order
+
+        :param contract_code: contract for which the order is placed (required)
+        :param order_type: market, limit, stop_market, take_market (required)
+        :param order_side: buy or sell (required)
+        :param size: order size (required)
+        :param client_id: client-specified id that will be returned in the received message
+        :param price: price of this order (if the order is of type limit)
+        
+        :returns: {
+                    "message":"New order request received.","order":
+                        {
+                            "client_id":"",
+                            "contract_code":"",
+                            "type":"",
+                            "side":"",
+                            "size":"",
+                            "price":"",
+                            "order_id":"",
+                            "trader_id":""
+                        },
+                    "timestamp":""
+                  } 
+        :raises: Exception if requests.Response is not successful
+        """
         if order_type != "market" and price is None:
             raise Exception("Specify the price, since order type is not market")
 
