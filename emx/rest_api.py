@@ -15,11 +15,9 @@
 
 import requests
 from emx.utils import (
-    EmxApiException,
     handle_result,
     generate_signature,
     get_timestamp,
-    is_http_success,
 )
 
 
@@ -77,11 +75,7 @@ class RestApi():
         self._headers['EMX-ACCESS-KEY'] = self._api_key
         self._headers['EMX-ACCESS-SIG'] = signature.decode().strip()
         self._headers['EMX-ACCESS-TIMESTAMP'] = str(timestamp)
-
-        result = self.session.get(url=url, params="", headers=self._headers)
-        if not is_http_success(result.status_code):
-            raise EmxApiException("Request failed. Reason: {}".format(result.text))
-        return result
+        return self.session.get(url=url, params="", headers=self._headers)
 
     # param start_time required but according to docs it is optional
     @handle_result
@@ -95,10 +89,7 @@ class RestApi():
         endpoint = "/v1/accounts/rank"
         url = self.uri + endpoint
         body = {"start_time": start_time}
-        result = self.session.get(url=url, params=body)
-        if not is_http_success(result.status_code):
-            raise EmxApiException("Request failed. Reason: {}".format(result.text))
-        return result
+        return self.session.get(url=url, params=body)
 
     @handle_result
     def get_balances(self, trader_id):
@@ -129,10 +120,7 @@ class RestApi():
         self._headers['EMX-ACCESS-KEY'] = self._api_key
         self._headers['EMX-ACCESS-SIG'] = signature.decode().strip()
         self._headers['EMX-ACCESS-TIMESTAMP'] = str(timestamp)
-        result = self.session.get(url=url, json=body, headers=self._headers)
-        if not is_http_success(result.status_code):
-            raise EmxApiException("Request failed. Reason: {}".format(result.text))
-        return result
+        return self.session.get(url=url, json=body, headers=self._headers)
 
     # Why should be authorized with Bearer Token
     @handle_result
@@ -156,10 +144,7 @@ class RestApi():
         self._headers['EMX-ACCESS-KEY'] = self._api_key
         self._headers['EMX-ACCESS-SIG'] = signature.decode().strip()
         self._headers['EMX-ACCESS-TIMESTAMP'] = str(timestamp)
-        result = self.session.get(url=url, json=body, headers=self._headers)
-        if not is_http_success(result.status_code):
-            raise EmxApiException("Request failed. Reason: {}".format(result.text))
-        return result
+        return self.session.get(url=url, json=body, headers=self._headers)
 
     @handle_result
     def update_account_alias(self, trader_id):
@@ -181,10 +166,7 @@ class RestApi():
         self._headers['EMX-ACCESS-KEY'] = self._api_key
         self._headers['EMX-ACCESS-SIG'] = signature.decode().strip()
         self._headers['EMX-ACCESS-TIMESTAMP'] = str(timestamp)
-        result = self.session.put(url=url, json=body, headers=self._headers)
-        if not is_http_success(result.status_code):
-            raise EmxApiException("Request failed. Reason: {}".format(result.text))
-        return result
+        return self.session.put(url=url, json=body, headers=self._headers)
 
     @handle_result
     def list_fills(self, contract_code="", order_id="", before="", after=""):
@@ -209,10 +191,7 @@ class RestApi():
         self._headers['EMX-ACCESS-KEY'] = self._api_key
         self._headers['EMX-ACCESS-SIG'] = signature.decode().strip()
         self._headers['EMX-ACCESS-TIMESTAMP'] = str(timestamp)
-        result = self.session.get(url=url, json=body, headers=self._headers)
-        if not is_http_success(result.status_code):
-            raise EmxApiException("Request failed. Reason: {}".format(result.text))
-        return result
+        return self.session.get(url=url, json=body, headers=self._headers)
 
     @handle_result
     def list_keys(self):
@@ -231,10 +210,7 @@ class RestApi():
         self._headers['EMX-ACCESS-KEY'] = self._api_key
         self._headers['EMX-ACCESS-SIG'] = signature.decode().strip()
         self._headers['EMX-ACCESS-TIMESTAMP'] = str(timestamp)
-        result = self.session.get(url=url, params="", headers=self._headers)
-        if not is_http_success(result.status_code):
-            raise EmxApiException("Request failed. Reason: {}".format(result.text))
-        return result
+        return self.session.get(url=url, params="", headers=self._headers)
 
     @handle_result
     def create_key(self):
@@ -253,10 +229,7 @@ class RestApi():
         self._headers['EMX-ACCESS-KEY'] = self._api_key
         self._headers['EMX-ACCESS-SIG'] = signature.decode().strip()
         self._headers['EMX-ACCESS-TIMESTAMP'] = str(timestamp)
-        result = self.session.post(url=url, params="", headers=self._headers)
-        if not is_http_success(result.status_code):
-            raise EmxApiException("Request failed. Reason: {}".format(result.text))
-        return result
+        return self.session.post(url=url, params="", headers=self._headers)
 
     @handle_result
     def delete_key(self, key):
@@ -276,10 +249,7 @@ class RestApi():
         self._headers['EMX-ACCESS-KEY'] = self._api_key
         self._headers['EMX-ACCESS-SIG'] = signature.decode().strip()
         self._headers['EMX-ACCESS-TIMESTAMP'] = str(timestamp)
-        result = self.session.delete(url=url, params="", headers=self._headers)
-        if not is_http_success(result.status_code):
-            raise EmxApiException("Request failed. Reason: {}".format(result.text))
-        return result
+        return self.session.delete(url=url, params="", headers=self._headers)
 
     @handle_result
     def list_orders(self, contract_code="", status="", before="", after=""):
@@ -318,10 +288,28 @@ class RestApi():
         self._headers['EMX-ACCESS-KEY'] = self._api_key
         self._headers['EMX-ACCESS-SIG'] = signature.decode().strip()
         self._headers['EMX-ACCESS-TIMESTAMP'] = str(timestamp)
-        result = self.session.get(url=url, json=body, headers=self._headers)
-        if not is_http_success(result.status_code):
-            raise EmxApiException("Request failed. Reason: {}".format(result.text))
-        return result
+        return self.session.get(url=url, json=body, headers=self._headers)
+
+    @handle_result
+    def get_contracts(self):
+        endpoint = "/v1/contracts"
+        self._headers = {
+                         'content-type': 'application/json'
+                        }
+
+        url = self.uri + endpoint
+        body_str = "{}"
+        return self.session.get(url=url, params=body_str, headers=self._headers)
+
+    def get_specific_contract(self, contract_code):
+        endpoint = "/v1/contracts/{}".format(contract_code)
+        self._headers = {
+                         'content-type': 'application/json'
+                        }
+
+        url = self.uri + endpoint
+        body_str = "{}"
+        return self.session.get(url=url, params=body_str, headers=self._headers)
 
     @handle_result
     def create_new_order(self, contract_code, order_type,
@@ -347,34 +335,59 @@ class RestApi():
         self._headers['EMX-ACCESS-KEY'] = self._api_key
         self._headers['EMX-ACCESS-SIG'] = signature.decode().strip()
         self._headers['EMX-ACCESS-TIMESTAMP'] = str(timestamp)
-        result = self.session.post(url=url, json=body, headers=self._headers)
-        if not is_http_success(result.status_code):
-            raise EmxApiException("Request failed. Reason: {}".format(result.text))
-        return result
+        return self.session.post(url=url, json=body, headers=self._headers)
 
     @handle_result
-    def get_contracts(self):
-        endpoint = "/v1/contracts"
-        self._headers = {
-                         'content-type': 'application/json'
-                        }
+    def modify_order(self, exchange_orderid, order_type, order_side, order_size, order_price=None, order_stop_price=None):
+        """Modify an existing order
 
+        :param exchange_orderid: exchange order id you want to modify
+        :param order_type: market, limit, stop_market, take_market (required)
+        :param order_side: buy or sell (required)
+        :param order_size: order size (required)
+        :param order_price: new price of this order
+        :param order_stop_price: trigger price for this stop order
+        
+        :returns: {"message":"Modify order request received.","order_id":"","timestamp":""} 
+        :raises: Exception if requests.Response is not successful
+        """
+
+        body = {}
+        for elem in [(order_type, "type"), (order_side, "side"), (order_size, "size"), (order_price, "price"), (order_stop_price, "stop_price")]:
+            if elem[0] is not None:
+                body[elem[1]] = elem[0]
+
+        endpoint = "/v1/orders/{}".format(exchange_orderid)
         url = self.uri + endpoint
-        body_str = "{}"
-        result = self.session.get(url=url, params=body_str, headers=self._headers)
-        if not is_http_success(result.status_code):
-            raise EmxApiException("Request failed. Reason: {}".format(result.text))
-        return result
+        timestamp = get_timestamp()
+        signature = generate_signature(self._api_secret, timestamp,
+                                       "PATCH", endpoint, body)
 
-    def get_specific_contract(self, contract_code):
-        endpoint = "/v1/contracts/{}".format(contract_code)
-        self._headers = {
-                         'content-type': 'application/json'
-                        }
+        self._headers['EMX-ACCESS-KEY'] = self._api_key
+        self._headers['EMX-ACCESS-SIG'] = signature.decode().strip()
+        self._headers['EMX-ACCESS-TIMESTAMP'] = str(timestamp)
+        return self.session.patch(url=url, json=body, headers=self._headers)
 
+    @handle_result
+    def cancel_order(self, exchange_orderid):
+        """Cancel an existing order
+
+        :param exchange_orderid: exchange order id you want to cancel
+        :returns: {"message":"Cancel order request received.","order_id":"","timestamp":""}
+        :raises: Exception if requests.Response is not successful
+        """
+
+        body = {
+          "order_id": exchange_orderid,
+        }
+
+        endpoint = "/v1/orders/{}".format(exchange_orderid)
         url = self.uri + endpoint
-        body_str = "{}"
-        result = self.session.get(url=url, params=body_str, headers=self._headers)
-        if not is_http_success(result.status_code):
-            raise EmxApiException("Request failed. Reason: {}".format(result.text))
-        return result
+        timestamp = get_timestamp()
+        signature = generate_signature(self._api_secret, timestamp,
+                                       "DELETE", endpoint, body)
+
+        self._headers['EMX-ACCESS-KEY'] = self._api_key
+        self._headers['EMX-ACCESS-SIG'] = signature.decode().strip()
+        self._headers['EMX-ACCESS-TIMESTAMP'] = str(timestamp)
+        return self.session.delete(url=url, json=body, headers=self._headers)
