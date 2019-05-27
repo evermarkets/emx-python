@@ -416,3 +416,27 @@ class RestApi():
         self._headers['EMX-ACCESS-SIG'] = signature.decode().strip()
         self._headers['EMX-ACCESS-TIMESTAMP'] = str(timestamp)
         return self.session.delete(url=url, json=body, headers=self._headers)
+
+    @handle_result
+    def cancel_all(self, contract_code=None):
+        """Cancel all active orders
+
+        :param contract_code: Contract to cancel orders for
+        :returns: {"message":"Order cancellation request received.","contract_code":"","timestamp":""}
+        :raises: Exception if requests.Response is not successful
+        """
+
+        body = {}
+        if contract_code is not None:
+            endpoint = "/v1/orders?contract_code={}".format(contract_code)
+        else:
+            endpoint = "/v1/orders"
+        url = self.uri + endpoint
+        timestamp = get_timestamp()
+        signature = generate_signature(self._api_secret, timestamp,
+                                       "DELETE", endpoint, body)
+
+        self._headers['EMX-ACCESS-KEY'] = self._api_key
+        self._headers['EMX-ACCESS-SIG'] = signature.decode().strip()
+        self._headers['EMX-ACCESS-TIMESTAMP'] = str(timestamp)
+        return self.session.delete(url=url, json=body, headers=self._headers)
