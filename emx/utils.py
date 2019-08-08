@@ -67,7 +67,7 @@ def handle_result(func):
         result = func(*args, **kwargs)
         if result.status_code < 200 or result.status_code > 300:
             raise EmxApiException("Request failed. Reason: {}".format(result.text))
-        return result.text
+        return result.json()
     return wrapper
 
 

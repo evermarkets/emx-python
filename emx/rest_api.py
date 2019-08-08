@@ -57,6 +57,43 @@ class RestApi():
         """
         self.session.close()
 
+
+    ### Public Market Data ###
+
+    @handle_result
+    def _get_route_without_body(self, endpoint):
+        self._headers = {
+                         'content-type': 'application/json'
+                        }
+
+        url = self.uri + endpoint
+        body_str = "{}"
+        return self.session.get(url=url, params=body_str, headers=self._headers)
+
+    def get_contracts(self):
+        return self._get_route_without_body("/v1/contracts")
+
+    def get_active_contracts(self):
+        return self._get_route_without_body("/v1/contracts/active")
+
+    def get_specific_contract(self, contract_code):
+        return self._get_route_without_body("/v1/contracts/{}".format(contract_code))
+
+    def get_contract_funding(self, contract_code):
+        return self._get_route_without_body("/v1/contracts/{}/funding".format(contract_code))
+
+    def get_contract_summary(self, contract_code):
+        return self._get_route_without_body("/v1/contracts/{}/summary".format(contract_code))
+
+    def get_contract_quote(self, contract_code):
+        return self._get_route_without_body("/v1/contracts/{}/quote".format(contract_code))
+
+    def get_contract_book(self, contract_code):
+        return self._get_route_without_body("/v1/contracts/{}/book".format(contract_code))
+
+
+    ### Authenticated Routes ###
+
     @handle_result
     def get_account(self):
         """
@@ -76,20 +113,6 @@ class RestApi():
         self._headers['EMX-ACCESS-SIG'] = signature.decode().strip()
         self._headers['EMX-ACCESS-TIMESTAMP'] = str(timestamp)
         return self.session.get(url=url, params="", headers=self._headers)
-
-    # param start_time required but according to docs it is optional
-    @handle_result
-    def get_account_rank(self, start_time):
-        """Get a ranking of trading accounts by % change in net liquidation value since a given date.
-
-        :returns: {"ranking": [{"alias": "string","percent_change_net_liquidation_value": "string"}]}
-        :raises: Exception if requests.Response is not successful
-        """
-
-        endpoint = "/v1/accounts/rank"
-        url = self.uri + endpoint
-        body = {"start_time": start_time}
-        return self.session.get(url=url, params=body)
 
     @handle_result
     def get_balances(self, trader_id):
@@ -121,52 +144,6 @@ class RestApi():
         self._headers['EMX-ACCESS-SIG'] = signature.decode().strip()
         self._headers['EMX-ACCESS-TIMESTAMP'] = str(timestamp)
         return self.session.get(url=url, json=body, headers=self._headers)
-
-    # Why should be authorized with Bearer Token
-    @handle_result
-    def get_account_alias(self, trader_id):
-        """Get trading account alias for a given account.
-
-        :param trader_id: trader id
-        :returns: {"key":"string", "secret":"string"}
-        :raises: Exception if requests.Response is not successful
-        """
-
-        endpoint = "/v1/accounts/{}/alias".format(trader_id)
-        url = self.uri + endpoint
-
-        body = {
-            "trader_id": trader_id,
-        }
-        timestamp = get_timestamp()
-        signature = generate_signature(self._api_secret, timestamp, "GET", endpoint, body)
-
-        self._headers['EMX-ACCESS-KEY'] = self._api_key
-        self._headers['EMX-ACCESS-SIG'] = signature.decode().strip()
-        self._headers['EMX-ACCESS-TIMESTAMP'] = str(timestamp)
-        return self.session.get(url=url, json=body, headers=self._headers)
-
-    @handle_result
-    def update_account_alias(self, trader_id):
-        """Get your account info including balances, margin requirements, and net liquidation value.
-
-        :returns:
-        :raises: Exception if requests.Response is not successful
-        """
-
-        endpoint = "/v1/accounts/{}/alias".format(trader_id)
-        url = self.uri + endpoint
-
-        body = {
-            "trader_id": trader_id,
-        }
-        timestamp = get_timestamp()
-        signature = generate_signature(self._api_secret, timestamp, "GET", endpoint, body)
-
-        self._headers['EMX-ACCESS-KEY'] = self._api_key
-        self._headers['EMX-ACCESS-SIG'] = signature.decode().strip()
-        self._headers['EMX-ACCESS-TIMESTAMP'] = str(timestamp)
-        return self.session.put(url=url, json=body, headers=self._headers)
 
     @handle_result
     def list_fills(self, contract_code="", order_id="", before="", after=""):
@@ -291,27 +268,6 @@ class RestApi():
         return self.session.get(url=url, json=body, headers=self._headers)
 
     @handle_result
-    def get_contracts(self):
-        endpoint = "/v1/contracts"
-        self._headers = {
-                         'content-type': 'application/json'
-                        }
-
-        url = self.uri + endpoint
-        body_str = "{}"
-        return self.session.get(url=url, params=body_str, headers=self._headers)
-
-    def get_specific_contract(self, contract_code):
-        endpoint = "/v1/contracts/{}".format(contract_code)
-        self._headers = {
-                         'content-type': 'application/json'
-                        }
-
-        url = self.uri + endpoint
-        body_str = "{}"
-        return self.session.get(url=url, params=body_str, headers=self._headers)
-
-    @handle_result
     def create_new_order(self, contract_code, order_type,
                          order_side, size, client_id="", price=""):
         """Create new order
@@ -322,7 +278,7 @@ class RestApi():
         :param size: order size (required)
         :param client_id: client-specified id that will be returned in the received message
         :param price: price of this order (if the order is of type limit)
-        
+
         :returns: {
                     "message":"New order request received.","order":
                         {
@@ -336,7 +292,7 @@ class RestApi():
                             "trader_id":""
                         },
                     "timestamp":""
-                  } 
+                  }
         :raises: Exception if requests.Response is not successful
         """
         if order_type != "market" and price is None:
@@ -372,8 +328,8 @@ class RestApi():
         :param order_size: order size (required)
         :param order_price: new price of this order
         :param order_stop_price: trigger price for this stop order
-        
-        :returns: {"message":"Modify order request received.","order_id":"","timestamp":""} 
+
+        :returns: {"message":"Modify order request received.","order_id":"","timestamp":""}
         :raises: Exception if requests.Response is not successful
         """
 
