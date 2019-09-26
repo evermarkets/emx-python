@@ -67,8 +67,7 @@ class RestApi():
                         }
 
         url = self.uri + endpoint
-        body_str = "{}"
-        return self.session.get(url=url, params=body_str, headers=self._headers)
+        return self.session.get(url=url, params="{}", headers=self._headers)
 
     def get_contracts(self):
         return self._get_route_without_body("/v1/contracts")
@@ -95,15 +94,11 @@ class RestApi():
     ### Authenticated Routes ###
 
     @handle_result
-    def get_account(self):
-        """
-        Get a list of all trader accounts for the current user.
+    def _get_authed_route_without_body(self, endpoint):
+        self._headers = {
+                         'content-type': 'application/json'
+                        }
 
-        :returns: {"accounts": [ {"trader_id": "string", "alias": "string"}]}
-        :raises: Exception if requests.Response is not successful
-        """
-
-        endpoint = "/v1/accounts"
         url = self.uri + endpoint
 
         timestamp = get_timestamp()
@@ -114,12 +109,19 @@ class RestApi():
         self._headers['EMX-ACCESS-TIMESTAMP'] = str(timestamp)
         return self.session.get(url=url, params="", headers=self._headers)
 
-    @handle_result
+    def get_account(self):
+        """
+        Get a list of all trader accounts for the current user.
+
+        :returns: {"accounts": [ {"trader_id": "string", "alias": "string"}]}
+        :raises: Exception if requests.Response is not successful
+        """
+        return self._get_authed_route_without_body("/v1/accounts")
+
     def get_balances(self, trader_id):
         """Get trading account info including balances, margin requirements, and net liquidation value.
 
         :returns: {
-                    "balance": "string",
                     "initial_margin_required": "string",
                     "maintenance_margin_required": "string",
                     "unrealized_profit": "string",
@@ -130,20 +132,25 @@ class RestApi():
                   }
         :raises: Exception if requests.Response is not successful
         """
+        return self._get_authed_route_without_body("/v1/accounts/{}".format(trader_id))
 
-        endpoint = "/v1/accounts/{}".format(trader_id)
-        url = self.uri + endpoint
+    def get_positions(self):
+        """Get positions for all trading accounts.
 
-        body = {
-            "trader_id": trader_id,
-        }
-        timestamp = get_timestamp()
-        signature = generate_signature(self._api_secret, timestamp, "GET", endpoint, body)
-
-        self._headers['EMX-ACCESS-KEY'] = self._api_key
-        self._headers['EMX-ACCESS-SIG'] = signature.decode().strip()
-        self._headers['EMX-ACCESS-TIMESTAMP'] = str(timestamp)
-        return self.session.get(url=url, json=body, headers=self._headers)
+        :returns: [{
+                    "trader_id": "string",
+                    "contract_code": "string",
+                    "quantity": "string",
+                    "marking_price": "string",
+                    "marking_time": "string",
+                    "average_entry_price": "string"
+                    "cost": "string",
+                    "day_closed_pl": "string",
+                    "open_pl": "string",
+                  }]
+        :raises: Exception if requests.Response is not successful
+        """
+        return self._get_authed_route_without_body("/v1/positions")['positions']
 
     @handle_result
     def list_fills(self, contract_code="", order_id="", before="", after=""):
@@ -170,24 +177,13 @@ class RestApi():
         self._headers['EMX-ACCESS-TIMESTAMP'] = str(timestamp)
         return self.session.get(url=url, json=body, headers=self._headers)
 
-    @handle_result
     def list_keys(self):
         """Get a list of all API keys (but not secrets). Secrets are only returned at the time of key creation.
 
         :returns: {"key":"string", "secret":"string"}
         :raises: Exception if requests.Response is not successful
         """
-
-        endpoint = "/v1/keys"
-        url = self.uri + endpoint
-
-        timestamp = get_timestamp()
-        signature = generate_signature(self._api_secret, timestamp, "GET", endpoint, "")
-
-        self._headers['EMX-ACCESS-KEY'] = self._api_key
-        self._headers['EMX-ACCESS-SIG'] = signature.decode().strip()
-        self._headers['EMX-ACCESS-TIMESTAMP'] = str(timestamp)
-        return self.session.get(url=url, params="", headers=self._headers)
+        return self._get_authed_route_without_body("/v1/keys")
 
     @handle_result
     def create_key(self):
@@ -269,15 +265,27 @@ class RestApi():
 
     @handle_result
     def create_new_order(self, contract_code, order_type,
-                         order_side, size, client_id="", price=""):
+                         order_side, size, client_id="", price="", stop_price="",
+                         stop_trigger="", peg_price_type="", peg_offset_value="",
+                         reduce_only=False, post_only=False):
         """Create new order
 
         :param contract_code: contract for which the order is placed (required)
-        :param order_type: market, limit, stop_market, take_market (required)
-        :param order_side: buy or sell (required)
-        :param size: order size (required)
+        :param order_type: 'market', 'limit', 'stop_market', 'take_market',
+          'stop_limit', 'take_limit' (required)
+        :param order_side: 'buy' or 'sell' (required)
+        :param size: order size (as string; required)
         :param client_id: client-specified id that will be returned in the received message
-        :param price: price of this order (if the order is of type limit)
+        :param price: price of this order (as string; required for limit orders)
+        :param stop_price: stop price of this order (as string; required for stop / take
+            orders)
+        :param stop_trigger: 'mark', 'index', or 'last' (valid only for stop / take orders)
+        :param peg_price_type: None, 'trailing-stop', or 'trailing-stop-pct' (valid only for
+            stop / take orders)
+        :param peg_offset_value: signed offset from trigger price (as string; valid only for
+            stop / take orders with peg_price_type set)
+        :param reduce_only: True or False
+        :param post_only: True or False
 
         :returns: {
                     "message":"New order request received.","order":
@@ -288,6 +296,12 @@ class RestApi():
                             "side":"",
                             "size":"",
                             "price":"",
+                            "stop_price":"",
+                            "stop_trigger":"",
+                            "peg_price_type":"",
+                            "peg_price_offset":"",
+                            "reduce_only":"",
+                            "post_only":"",
                             "order_id":"",
                             "trader_id":""
                         },
@@ -305,7 +319,16 @@ class RestApi():
           "side": order_side,
           "size": size,
           "price": price,
+          "stop_price": stop_price,
+          "peg_offset_value": peg_offset_value,
+          "reduce_only": reduce_only,
+          "post_only": post_only,
         }
+
+        if stop_trigger:
+            body["stop_trigger"] = stop_trigger
+        if peg_price_type:
+            body["peg_price_type"] = peg_price_type
 
         endpoint = "/v1/orders"
         url = self.uri + endpoint
