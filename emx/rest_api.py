@@ -134,9 +134,10 @@ class RestApi():
         """
         return self._get_authed_route_without_body("/v1/accounts/{}".format(trader_id))
 
-    def get_positions(self):
+    def get_positions(self, contract_code=None):
         """Get positions for all trading accounts.
 
+        :param contract_code: Contract to get position for
         :returns: [{
                     "trader_id": "string",
                     "contract_code": "string",
@@ -150,7 +151,11 @@ class RestApi():
                   }]
         :raises: Exception if requests.Response is not successful
         """
-        return self._get_authed_route_without_body("/v1/positions")['positions']
+        if contract_code:
+            endpoint = "/v1/positions/?contract_code={}".format(contract_code)
+        else:
+            endpoint = "/v1/positions/"
+        return self._get_authed_route_without_body(endpoint)['positions']
 
     @handle_result
     def list_fills(self, contract_code="", order_id="", before="", after=""):
